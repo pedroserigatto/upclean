@@ -4,7 +4,7 @@ VERSION=2.0
 
 # ------------------------------------------------------------------------------
 # UpClean v2.0 — An update and cleanup script for macOS.
-# Cloned from https://github.com/divspace/upclean
+# Forked from https://github.com/divspace/upclean
 # ------------------------------------------------------------------------------
 
 soap=🧼
