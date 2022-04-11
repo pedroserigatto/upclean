@@ -2,38 +2,17 @@
 
 An update and cleanup script for macOS.
 
-- [Installation](#installation)
 - [Usage](#usage)
 - [Configuration](#configuration)
-- [Update](#update)
-- [Uninstall](#uninstall)
 
 ![Screenshot](./screenshot.png)
-
-## Installation
-
-You can use any of the methods below to install UpClean:
-
-```bash
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/divspace/upclean/master/installer.sh)"
-```
-
-```bash
-sh -c "$(wget https://raw.githubusercontent.com/divspace/upclean/master/installer.sh -O -)"
-```
-
-```bash
-curl -o upclean https://raw.githubusercontent.com/divspace/upclean/master/upclean.sh
-chmod +x upclean
-mv upclean /usr/local/bin/upclean
-```
 
 ## Usage
 
 ```
 $ upclean --help
 
-UpClean 1.4.0 🧼 upclean.app
+UpClean 2.0 🧼 upclean.app
 
 An update and cleanup script for macOS.
 
@@ -64,15 +43,3 @@ You can configure the [runtime options](#usage) by adding them to the `.upcleanr
 ```
 
 Passing options directly will override any configuration options that you may have set.
-
-## Update
-
-```bash
-curl -fsSL "https://raw.githubusercontent.com/divspace/upclean/master/installer.sh" | bash -s update
-```
-
-## Uninstall
-
-```bash
-curl -fsSL "https://raw.githubusercontent.com/divspace/upclean/master/installer.sh" | bash -s uninstall
-```
