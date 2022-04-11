@@ -354,7 +354,7 @@ function updateHomebrew() {
 function updateMacAppStore() {
     if type "mas" >>$outputOfShell 2>&1 && [[ -n $(mas outdated) ]]; then
         info "update" "Mac & App Store"
-        softwareupdate -i -a >>$outputOfShell 2>&1
+        softwareupdate -i -a --verbose >>$outputOfShell 2>&1
         mas outdated >>$outputOfShell 2>&1
         mas upgrade >>$outputOfShell 2>&1
         info "done"
@@ -508,7 +508,7 @@ function handleOptions() {
     $shouldClean && initializeCleanup
 
     # Reinitialize the sudo timestamp since Homebrew invalidates it
-    $shouldClearMemory || $shouldFlushDns && keepSudoAlive
+    # $shouldClearMemory || $shouldFlushDns && keepSudoAlive
 
     $shouldClearMemory && clearMemory
     $shouldFlushDns && flushDns
