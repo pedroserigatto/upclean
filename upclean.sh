@@ -6,6 +6,15 @@ VERSION=2.0
 # Forked from https://github.com/divspace/upclean
 # ------------------------------------------------------------------------------
 
+# Trap ctrl+c and call trap_ctrlc()
+trap trap_ctrlc INT
+
+function trap_ctrlc() {
+    echo "\n\nCTRL+C detected. Exiting..."
+    stopSpinner
+    exit 1
+}
+
 soap=🧼
 
 bold="\033[1m"
@@ -62,21 +71,29 @@ function info() {
     local message
 
     case $1 in
-        "clean") action=Cleaning; shift; message=$1 ;;
-        "update") action=Updating; shift; message=$1 ;;
-        "done") unset action message ;;
-        *) action=$1; shift; message=$1 ;;
+    "clean")
+        action=Cleaning
+        shift
+        message=$1
+        ;;
+    "update")
+        action=Updating
+        shift
+        message=$1
+        ;;
+    "done") unset action message ;;
+    *)
+        action=$1
+        shift
+        message=$1
+        ;;
     esac
 
     shift
 
     if [[ -n $action ]] && [[ -n $message ]]; then
         message=$(printf "%s %b%s%b..." "$action" "$bold" "$message" "$reset")
-
         startSpinner "$message"
-
-        # Trap the interrupt signal and stop the spinner animation
-        trap 'stopSpinner 1; exit 1' INT
     else
         stopSpinner $?
     fi
@@ -92,8 +109,8 @@ function keepSudoAlive() {
     done >>$outputOfShell 2>&1 # 2>/dev/null &
 }
 
-function deleteLog(){
-    if [ -f "$outputOfShell" ] ; then
+function deleteLog() {
+    if [ -f "$outputOfShell" ]; then
         rm "$outputOfShell"
     fi
 }
@@ -121,30 +138,30 @@ function loadConfigFile() {
 
 function spinner() {
     case $1 in
-        "start")
-            (( column=60 - ${#2} ))
-            printf "%s%${column}s" "$2"
+    "start")
+        ((column = 60 - ${#2}))
+        printf "%s%${column}s" "$2"
 
-            i=1
-            delay=0.13
-            frames="-\|/"
+        i=1
+        delay=0.13
+        frames="-\|/"
 
-            while true; do
-                printf "\b%s" ${frames:i++%${#frames}:1}
-                sleep "$delay"
-            done
-            ;;
-        "stop")
-            [[ -z $3 ]] && fail "Spinner is not running!"
+        while true; do
+            printf "\b%s" ${frames:i++%${#frames}:1}
+            sleep "$delay"
+        done
+        ;;
+    "stop")
+        [[ -z $3 ]] && fail "Spinner is not running!"
 
-            kill "$3" >>$outputOfShell 2>&1
+        kill "$3" >>$outputOfShell 2>&1
 
-            if [[ $2 -eq 1 ]]; then
-                printf "\b%b✓%b\n" "${green}" "${reset}"
-            else
-                printf "\b%b𐊴%b\n" "${red}" "${reset}"
-            fi
-            ;;
+        if [[ $2 -eq 1 ]]; then
+            printf "\b%b✓%b\n" "${green}" "${reset}"
+        else
+            printf "\b%b𐊴%b\n" "${red}" "${reset}"
+        fi
+        ;;
     esac
 }
 
@@ -171,7 +188,7 @@ function calculateDiskSpaceSavings() {
     if [[ -n $availableDiskSpaceBefore ]] && [[ -n $availableDiskSpaceAfter ]]; then
         local diskSpaceDifference
 
-        (( diskSpaceDifference=availableDiskSpaceAfter - availableDiskSpaceBefore ))
+        ((diskSpaceDifference = availableDiskSpaceAfter - availableDiskSpaceBefore))
 
         if [[ $diskSpaceDifference -gt 0 ]] && [[ $diskSpaceDifference -lt 10000 ]]; then
             unit=MB
@@ -371,7 +388,7 @@ function updatePIP() {
         python3 -c "import pkg_resources; from subprocess import call; packages = [dist.project_name for dist in pkg_resources.working_set]; call('pip install --upgrade ' + ' '.join(packages), shell=True)" >>$outputOfShell 2>&1
         info "done"
         info "update" "PIP part 2"
-        pipupgrade --ignore-error --force --yes --jobs 12  >>$outputOfShell 2>&1
+        pipupgrade --ignore-error --force --yes --jobs 12 >>$outputOfShell 2>&1
         info "done"
     fi
 }
@@ -387,7 +404,7 @@ function updateConda() {
     fi
 }
 
-function updateOhMyZsh(){
+function updateOhMyZsh() {
     info "update" "OhMyZsh"
     zsh -ic "omz update" >>$outputOfShell 2>&1
     info "done"
@@ -410,7 +427,7 @@ function updateAppStore() {
 function updateMicrosoft() {
     microsoftUpdaterPath=/Library/Application\ Support/Microsoft/MAU2.0/Microsoft\ AutoUpdate.app/Contents/MacOS/msupdate
 
-    if [ -f "$microsoftUpdaterPath" ] ; then
+    if [ -f "$microsoftUpdaterPath" ]; then
         info "update" "Microsoft"
         /Library/Application\ Support/Microsoft/MAU2.0/Microsoft\ AutoUpdate.app/Contents/MacOS/msupdate --install >>$outputOfShell 2>&1
         info "done"
@@ -493,16 +510,16 @@ function initializeMacOsUpdate() {
 function checkOptions() {
     for option in "$@"; do
         case $option in
-            "-h"|"--help") usage ;;
-            "--skip-clean") shouldClean=false ;;
-            "--skip-composer") shouldUpdateComposer=false ;;
-            "--skip-composer-packages") shouldUpdateComposerPackages=false ;;
-            "--skip-dns") shouldFlushDns=false ;;
-            "--skip-docker") shouldCleanDocker=false ;;
-            "--skip-homebrew") shouldUpdateHomebrew=false ;;
-            "--skip-mas") shouldUpdateMas=false ;;
-            "--skip-memory") shouldClearMemory=false ;;
-            "--skip-update") shouldUpdate=false ;;
+        "-h" | "--help") usage ;;
+        "--skip-clean") shouldClean=false ;;
+        "--skip-composer") shouldUpdateComposer=false ;;
+        "--skip-composer-packages") shouldUpdateComposerPackages=false ;;
+        "--skip-dns") shouldFlushDns=false ;;
+        "--skip-docker") shouldCleanDocker=false ;;
+        "--skip-homebrew") shouldUpdateHomebrew=false ;;
+        "--skip-mas") shouldUpdateMas=false ;;
+        "--skip-memory") shouldClearMemory=false ;;
+        "--skip-update") shouldUpdate=false ;;
         esac
     done
 }
