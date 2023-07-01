@@ -1,5 +1,4 @@
-#!/usr/bin/env bash
-
+#!/usr/bin/env zsh
 VERSION=2.0
 
 # ------------------------------------------------------------------------------
@@ -75,6 +74,9 @@ function info() {
         message=$(printf "%s %b%s%b..." "$action" "$bold" "$message" "$reset")
 
         startSpinner "$message"
+
+        # Trap the interrupt signal and stop the spinner animation
+        trap 'stopSpinner 1; exit 1' INT
     else
         stopSpinner $?
     fi
@@ -347,16 +349,7 @@ function updateHomebrew() {
         # brew update --force >>$outputOfShell 2>&1
         brew upgrade >>$outputOfShell 2>&1
         brew upgrade --cask >>$outputOfShell 2>&1
-        info "done"
-    fi
-}
-
-function updateMacAppStore() {
-    if type "mas" >>$outputOfShell 2>&1 && [[ -n $(mas outdated) ]]; then
-        info "update" "Mac & App Store"
-        softwareupdate -i -a --verbose >>$outputOfShell 2>&1
-        mas outdated >>$outputOfShell 2>&1
-        mas upgrade >>$outputOfShell 2>&1
+        brew cu -f -a --cleanup -y >>$outputOfShell 2>&1
         info "done"
     fi
 }
@@ -374,8 +367,10 @@ function updateNPM() {
 
 function updatePIP() {
     if type "pip" >>$outputOfShell 2>&1; then
-        info "update" "PIP"
+        info "update" "PIP part 1"
         python3 -c "import pkg_resources; from subprocess import call; packages = [dist.project_name for dist in pkg_resources.working_set]; call('pip install --upgrade ' + ' '.join(packages), shell=True)" >>$outputOfShell 2>&1
+        info "done"
+        info "update" "PIP part 2"
         pipupgrade --ignore-error --force --yes --jobs 12  >>$outputOfShell 2>&1
         info "done"
     fi
@@ -393,9 +388,21 @@ function updateConda() {
 }
 
 function updateOhMyZsh(){
-    if type "omz" >>$outputOfShell 2>&1; then
-        info "update" "OhMyZsh"
-        omz update >>$outputOfShell 2>&1
+    info "update" "OhMyZsh"
+    zsh -ic "omz update" >>$outputOfShell 2>&1
+    info "done"
+}
+
+function updateMac() {
+    info "update" "Mac"
+    softwareupdate -i -a --verbose >>$outputOfShell 2>&1
+    info "done"
+}
+
+function updateAppStore() {
+    if type "mas" >>$outputOfShell 2>&1; then # && [[ -n $(mas outdated) ]]; then
+        info "Listing outdated apps from" "App Store"
+        mas outdated >>$outputOfShell 2>&1
         info "done"
     fi
 }
@@ -423,7 +430,7 @@ function clearMemory() {
 function emptyTrash() {
     info "Emptying" "trash"
     rm -rf /Volumes/*/.Trashes/* >>$outputOfShell 2>&1
-    rm -rf ~/.Trash/* >>$outputOfShell 2>&1
+    rm -rf -v ~/.Trash/* >>$outputOfShell 2>&1
     info "done"
 }
 
@@ -464,18 +471,19 @@ function initializeCleanup() {
 }
 
 function initializeUpdate() {
+    $shouldUpdateOhMyZsh && updateOhMyZsh
     $shouldUpdateComposer && updateComposer
     $shouldUpdateComposerPackages && updateComposerPackages
     $shouldUpdateHomebrew && updateHomebrew
     $shouldUpdateNPM && updateNPM
     $shouldUpdatePIP && updatePIP
     $shouldUpdateConda && updateConda
-    $shouldUpdateOhMyZsh && updateOhMyZsh
 }
 
 function initializeMacOsUpdate() {
-    $shouldUpdateMas && updateMacAppStore
+    $shouldUpdateMas && updateMac
     # $shouldUpdateMicrosoft && updateMicrosoft
+    $shouldUpdateMas && updateAppStore
 }
 
 # ------------------------------------------------------------------------------
@@ -521,16 +529,11 @@ checkOptions "$@"
 handleOptions
 showDiskSpaceSavings
 
+echo " "
+echo "------------------------------------------------------------------------------"
+echo "Updating App Store apps..."
+mas upgrade
+echo " "
+echo "Done!"
+
 exit 0
-
-## Brew Update & Clean
-# brew update-reset && echo "->List of outdated apps:" && brew outdated && brew upgrade && echo "->List of outdated casks:" && brew outdated --cask --greedy && brew upgrade --cask && echo "->Cleaning up:" && brew cleanup -s && echo "->Brew Doctor:" && brew doctor -q && brew missing
-
-## Update AppStore Apps
-# mas upgrade
-
-## Update all System Softwares
-# softwareupdate --install --all --verbose
-
-## Conda Update
-# conda update conda --yes && conda clean --all --yes && conda update -n base --all --yes
